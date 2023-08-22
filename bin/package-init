@@ -1,0 +1,207 @@
+#!/usr/bin/env node
+
+const fs = require('fs');
+const util = require('util');
+const exec = util.promisify(require('child_process').exec);
+const child_process = require('node:child_process');
+const initConfig = require('./package-init.config.json');
+
+/**
+ * prerequisite: `gh` cli, `gh auth login` command
+ * node bin/create-package
+ */
+
+const { userId, repoId, repoDescription, repoKeywords } = initConfig;
+const repoFullName = `${userId}/${repoId}`;
+const repoGitUrl = `git@github.com:${userId}/${repoId}.git`;
+
+const initPackage = () => {
+  const path = 'package.json';
+  const repoScopeName = `@${repoFullName}`;
+  const repoHttpUrl = `https://github.com/${userId}/${repoId}`;
+  const repoHomepageUrl = `${repoHttpUrl}#readme`;
+  const repoBugsUrl = `${repoHttpUrl}/issues`;
+
+  if (!fs.existsSync(path)) {
+    throw new Error(`${path} does not exist.`);
+  }
+
+  const packageRawData = fs.readFileSync(path);
+  const packageData = JSON.parse(packageRawData);
+
+  const packageDataUpdated = {
+    ...packageData,
+    name: repoScopeName,
+    version: '0.1.0',
+    description: repoDescription,
+    keywords: repoKeywords,
+    homepage: repoHomepageUrl,
+    repository: {
+      ...packageData.repository,
+      url: repoGitUrl,
+    },
+    bugs: {
+      ...packageData.bugs,
+      url: repoBugsUrl,
+    },
+  };
+
+  const packageDataUpdatedJson = JSON.stringify(packageDataUpdated, null, 2);
+  fs.writeFileSync(path, packageDataUpdatedJson);
+};
+
+const removeFile = (path) => {
+  try {
+    if (!fs.existsSync(path)) {
+      return;
+    }
+
+    fs.rmSync(path);
+  } catch (error) {
+    console.error(error);
+    process.exit(1);
+  }
+};
+
+const removeDir = (path) => {
+  try {
+    if (!fs.existsSync(path)) {
+      return;
+    }
+
+    fs.rmSync(path, { recursive: true });
+  } catch (error) {
+    console.error(error);
+    process.exit(1);
+  }
+};
+
+const initChangelog = () => {
+  const path = 'CHANGELOG.md';
+
+  if (!fs.existsSync(path)) {
+    return;
+  }
+
+  fs.writeFileSync(path, '');
+};
+
+const initTodo = () => {
+  const path = 'TODO';
+
+  if (!fs.existsSync(path)) {
+    return;
+  }
+
+  fs.writeFileSync(path, '');
+};
+
+const initReadme = () => {
+  const path = 'README.md';
+
+  if (!fs.existsSync(path)) {
+    return;
+  }
+
+  fs.writeFileSync(path, `# ${repoId}\n`);
+};
+
+const repoExists = async () => {
+  try {
+    await exec(`git ls-remote ${repoGitUrl}`);
+    return true;
+  } catch (error) {
+    // repo not found
+    if (error.code === 128) {
+      return false;
+    } else {
+      throw error;
+    }
+  }
+};
+
+const initRepo = async () => {
+  try {
+    const shouldDeleteRepo = await repoExists();
+    if (shouldDeleteRepo) {
+      await exec(`gh repo delete ${repoFullName} --yes`);
+    }
+
+    await exec(`gh repo create ${repoFullName} --public --description "${repoDescription}"`);
+    const repoCreated = await repoExists();
+    return repoCreated;
+  } catch (error) {
+    console.error(error);
+    process.exit(1);
+  }
+};
+
+const initGit = async () => {
+  try {
+    await exec('rm -rf .git');
+    await exec('git init');
+    await exec('git config user.name spetushkou');
+    await exec('git config user.email sergey.petushkou@gmail.com');
+    await exec(`git remote add origin ${repoGitUrl}`);
+    await exec('git checkout -b main');
+    await exec("git add --all && git commit -m 'chore: init'");
+    await exec('git push -u origin main');
+    await exec('git checkout -b develop');
+    await exec('git push -u origin develop');
+  } catch (error) {
+    console.error(error);
+    process.exit(1);
+  }
+};
+
+const npmInstall = async () => {
+  const npmInstall = child_process.spawn('npm', ['install']);
+
+  npmInstall.stdout.on('data', function (data) {
+    process.stdout.write(data.toString());
+  });
+  npmInstall.stderr.on('data', function (data) {
+    process.stderr.write(data.toString());
+  });
+  npmInstall.on('close', function (code) {
+    process.stdout.end();
+    process.stderr.end();
+    process.exit(0);
+  });
+};
+
+const run = async () => {
+  if (!userId || !repoId) {
+    throw new Error('Repo config is not valid.');
+  }
+
+  removeFile('bin/git-log');
+  removeFile('bin/husky-install');
+  removeFile('bin/husky-uninstall');
+  // removeFile('bin/package-init');
+  // removeFile('bin/package-init.config.json');
+  removeFile('bin/package-install-template');
+  removeFile('bin/package-install-template.config.json');
+  removeFile('package-lock.json');
+
+  removeDir('.github');
+  removeDir('doc');
+  removeDir('node_modules');
+  removeDir('src/types');
+
+  initPackage();
+  await npmInstall();
+
+  initChangelog();
+  initTodo();
+  initReadme();
+
+  const repoInitialized = await initRepo();
+  if (!repoInitialized) {
+    throw new Error('Repo is not initialized.');
+  }
+
+  await initGit();
+};
+
+run();

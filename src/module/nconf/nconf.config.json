@@ -1,0 +1,5 @@
+{
+  "CONFIG1": "config1_value",
+  "CONFIG2": "config2_value",
+  "MONGODB_USER": "username_override"
+}

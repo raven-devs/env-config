@@ -67,11 +67,13 @@
     "test:staged": "jest --no-cache --onlyChanged",
     "test:watch": "jest --no-cache --watch",
     "demo:dotenv": "NODE_ENV=development ts-node ./src/module/dotenv/dotenv.ts",
-    "demo:nconf": "NODE_ENV=development ts-node ./src/module/nconf/nconf.ts --command1=command1_value --command2=command2_value"
+    "demo:nconf": "NODE_ENV=development ts-node ./src/module/nconf/nconf.ts --command1=command1_value --command2=command2_value",
+    "demo:env-cmd": "NODE_ENV=development env-cmd --file=./.env --no-override ts-node ./src/module/env-cmd/env-cmd.ts"
   },
   "dependencies": {
     "dotenv": "^16.3.1",
     "dotenv-expand": "^10.0.0",
+    "env-cmd": "^10.1.0",
     "nconf": "^0.12.0"
   },
   "devDependencies": {

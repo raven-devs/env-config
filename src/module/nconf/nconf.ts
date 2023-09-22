@@ -46,14 +46,8 @@ console.log('config.env.UNDEFINED', config.get('UNDEFINED'));
 console.log('config.env.ESCAPED', config.get('ESCAPED'));
 console.log('config.env.UNDEFINED_WITH_DEFAULT', config.get('UNDEFINED_WITH_DEFAULT'));
 console.log('config.env.DEFINED_WITH_DEFAULT', config.get('DEFINED_WITH_DEFAULT'));
-console.log(
-  'config.env.UNDEFINED_WITH_DEFINED_NESTED',
-  config.get('UNDEFINED_WITH_DEFINED_NESTED'),
-);
-console.log(
-  'config.env.UNDEFINED_WITH_UNDEFINED_NESTED',
-  config.get('UNDEFINED_WITH_UNDEFINED_NESTED'),
-);
+console.log('config.env.UNDEFINED_WITH_DEFINED_NESTED', config.get('UNDEFINED_WITH_DEFINED_NESTED'));
+console.log('config.env.UNDEFINED_WITH_UNDEFINED_NESTED', config.get('UNDEFINED_WITH_UNDEFINED_NESTED'));
 
 console.log('config.config.CONFIG1', config.get('CONFIG1'));
 console.log('config.config.CONFIG2', config.get('CONFIG2'));

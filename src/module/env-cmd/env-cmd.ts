@@ -1,7 +1,6 @@
 /**
  * copy content from .env_demo to .env
  * npm run demo:env-cmd
- * npm run demo:env-cmd-async
  * NODE_ENV=development npx env-cmd npx ts-node ./src/module/env-cmd/env-cmd.ts
  */
 
